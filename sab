@@ -32,7 +32,7 @@ local Enabled = {
     AntiRagdoll = false,
     SpinBot = false,
     SpeedWhileStealing = false,
-    AutoSteal = true,  -- Auto Steal now starts ON
+    AutoSteal = true,
     Unwalk = false,
     Optimizer = false,
     Galaxy = false,
@@ -1243,7 +1243,7 @@ Players.PlayerAdded:Connect(function(player)
     end
 end)
 local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
-local guiScale = isMobile and 0.75 or 1  -- Better mobile scaling
+local guiScale = isMobile and 0.75 or 1
 local C = {
     bg = Color3.fromRGB(2, 2, 4),
     purple = Color3.fromRGB(60, 130, 255),
@@ -2145,144 +2145,117 @@ local function stopFloat()
         end
     end
 end
--- ==================== MOBILE FRIENDLY + AUTO STEAL ON + 🥶 MENU BUTTON ====================
+-- ==================== 1 ROW SMALLER BUTTONS WITH BACKGROUND + BLACK -> WHITE WHEN ON ====================
 
 local sideBtnContainer = Instance.new("Frame", sg)
-sideBtnContainer.Size = UDim2.new(0, 220, 0, 280)
-sideBtnContainer.Position = isMobile and UDim2.new(0, 15, 0, 80) or UDim2.new(0, 25, 0, 120)
+sideBtnContainer.Size = UDim2.new(0, 520, 0, 80)
+sideBtnContainer.Position = isMobile and UDim2.new(0.5, -260, 0, 20) or UDim2.new(0, 25, 0, 25)
 sideBtnContainer.BackgroundTransparency = 1
 
-local function createExactButton(text, subText, isMode)
-    local btnFrame = Instance.new("Frame", sideBtnContainer)
-    btnFrame.Size = UDim2.new(0, 92, 0, 68)
-    btnFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 18)
-    btnFrame.BorderSizePixel = 0
-    Instance.new("UICorner", btnFrame).CornerRadius = UDim.new(0, 8)
+local buttonData = {
+    {text = "LOCK ON",   sub = "MODE",   color = Color3.fromRGB(255, 80, 80)},
+    {text = "FLOAT",     sub = "MODE",   color = Color3.fromRGB(0, 255, 255)},
+    {text = "AUTO LEFT", sub = "MODE",   color = Color3.fromRGB(100, 255, 160)},
+    {text = "AUTO RIGHT",sub = "MODE",   color = Color3.fromRGB(100, 255, 160)},
+    {text = "DROP",      sub = "ACTION", color = Color3.fromRGB(255, 200, 100)},
+    {text = "TP DOWN",   sub = "ACTION", color = Color3.fromRGB(100, 200, 255)},
+    {text = "BAT",       sub = "AIMBOT", color = Color3.fromRGB(255, 255, 100)}
+}
 
-    local label = Instance.new("TextLabel", btnFrame)
-    label.Size = UDim2.new(1, 0, 0, 24)
-    label.BackgroundTransparency = 1
-    label.Text = text
-    label.TextColor3 = Color3.fromRGB(255, 255, 255)
-    label.Font = Enum.Font.GothamBold
-    label.TextSize = 11
-    label.Position = UDim2.new(0, 0, 0, 4)
+local sideButtons = {}
+local btnWidth = 68
+local spacing = 8
+local startX = 10
 
-    local sub = Instance.new("TextLabel", btnFrame)
-    sub.Size = UDim2.new(1, 0, 0, 16)
-    sub.BackgroundTransparency = 1
-    sub.Text = subText
-    sub.TextColor3 = Color3.fromRGB(140, 140, 160)
-    sub.Font = Enum.Font.Gotham
-    sub.TextSize = 9
-    sub.Position = UDim2.new(0, 0, 0, 24)
+for i, data in ipairs(buttonData) do
+    local btn = Instance.new("TextButton", sideBtnContainer)
+    btn.Size = UDim2.new(0, btnWidth, 0, 68)
+    btn.Position = UDim2.new(0, startX + (i-1)*(btnWidth + spacing), 0, 6)
+    btn.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+    btn.Text = data.text .. "\n" .. data.sub
+    btn.TextColor3 = Color3.fromRGB(220, 220, 220)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 10
+    btn.TextWrapped = true
+    btn.BorderSizePixel = 0
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 10)
 
-    local circle = Instance.new("Frame", btnFrame)
-    circle.Size = UDim2.new(0, 22, 0, 22)
-    circle.Position = UDim2.new(0.5, -11, 1, -38)
-    circle.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-    Instance.new("UICorner", circle).CornerRadius = UDim.new(1, 0)
+    local stroke = Instance.new("UIStroke", btn)
+    stroke.Thickness = 2
+    stroke.Color = data.color
+    stroke.Transparency = 0.6
 
-    local innerCircle = Instance.new("Frame", circle)
-    innerCircle.Size = UDim2.new(0, 14, 0, 14)
-    innerCircle.Position = UDim2.new(0.5, -7, 0.5, -7)
-    innerCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    Instance.new("UICorner", innerCircle).CornerRadius = UDim.new(1, 0)
-    innerCircle.Visible = false
+    sideButtons[data.text] = {btn = btn, on = false, baseColor = data.color}
 
-    return btnFrame, circle, innerCircle
-end
-
-local lockBtn, lockCircle, lockInner = createExactButton("LOCK ON", "MODE", true)
-lockBtn.Position = UDim2.new(0, 8, 0, 8)
-
-local floatBtn, floatCircle, floatInner = createExactButton("FLOAT", "MODE", true)
-floatBtn.Position = UDim2.new(0, 112, 0, 8)
-
-local autoLeftBtn, leftCircle, leftInner = createExactButton("AUTO LEFT", "MODE", true)
-autoLeftBtn.Position = UDim2.new(0, 8, 0, 88)
-
-local autoRightBtn, rightCircle, rightInner = createExactButton("AUTO RIGHT", "MODE", true)
-autoRightBtn.Position = UDim2.new(0, 112, 0, 88)
-
-local dropBtn, dropCircle, dropInner = createExactButton("DROP", "ACTION", false)
-dropBtn.Position = UDim2.new(0, 8, 0, 168)
-
-local tpDownBtn, tpCircle, tpInner = createExactButton("TP DOWN", "ACTION", false)
-tpDownBtn.Position = UDim2.new(0, 112, 0, 168)
-
-local batBtn = Instance.new("TextButton", sideBtnContainer)
-batBtn.Size = UDim2.new(0, 92, 0, 68)
-batBtn.Position = UDim2.new(0, 8, 0, 248)
-batBtn.BackgroundColor3 = Color3.fromRGB(10, 10, 18)
-batBtn.Text = "BAT\n⚔️"
-batBtn.TextColor3 = Color3.fromRGB(255, 255, 100)
-batBtn.Font = Enum.Font.GothamBold
-batBtn.TextSize = 11
-Instance.new("UICorner", batBtn).CornerRadius = UDim.new(0, 8)
-
--- 🥶 MENU BUTTON (opens main GUI)
-local menuBtn = Instance.new("TextButton", sideBtnContainer)
-menuBtn.Size = UDim2.new(0, 92, 0, 68)
-menuBtn.Position = UDim2.new(0, 112, 0, 248)
-menuBtn.BackgroundColor3 = Color3.fromRGB(10, 10, 18)
-menuBtn.Text = "🥶\nMENU"
-menuBtn.TextColor3 = Color3.fromRGB(100, 200, 255)
-menuBtn.Font = Enum.Font.GothamBold
-menuBtn.TextSize = 18
-Instance.new("UICorner", menuBtn).CornerRadius = UDim.new(0, 8)
-
--- Mobile friendly touch handling
-local function makeMobileFriendly(btn)
+    -- Make smaller and mobile friendly
     btn.AutoButtonColor = false
+
     btn.MouseButton1Click:Connect(function()
-        playSound("rbxassetid://6895079813", 0.5, 1)
+        local info = sideButtons[data.text]
+        info.on = not info.on
+
+        if info.on then
+            btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)  -- Black turns white when ON
+            btn.TextColor3 = Color3.fromRGB(0, 0, 0)
+            stroke.Transparency = 0
+        else
+            btn.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+            btn.TextColor3 = Color3.fromRGB(220, 220, 220)
+            stroke.Transparency = 0.6
+        end
+
+        playSound("rbxassetid://6895079813", 0.5, 1.1)
+
+        -- Functionality
+        if data.text == "AUTO LEFT" then
+            AutoWalkEnabled = info.on
+            Enabled.AutoWalkEnabled = info.on
+            if info.on then startAutoWalk() else stopAutoWalk() end
+        elseif data.text == "AUTO RIGHT" then
+            AutoRightEnabled = info.on
+            Enabled.AutoRightEnabled = info.on
+            if info.on then startAutoRight() else stopAutoRight() end
+        elseif data.text == "FLOAT" then
+            Enabled.Float = info.on
+            if info.on then startFloat() else stopFloat() end
+        elseif data.text == "BAT" then
+            Enabled.BatAimbot = info.on
+            if info.on then startBatAimbot() else stopBatAimbot() end
+        end
     end)
 end
 
-for _, btn in pairs({lockBtn, floatBtn, autoLeftBtn, autoRightBtn, dropBtn, tpDownBtn, batBtn, menuBtn}) do
-    makeMobileFriendly(btn)
-end
+-- 🥶 MENU BUTTON (opens main menu)
+local menuBtn = Instance.new("TextButton", sideBtnContainer)
+menuBtn.Size = UDim2.new(0, 68, 0, 68)
+menuBtn.Position = UDim2.new(0, startX + 7*(btnWidth + spacing), 0, 6)
+menuBtn.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+menuBtn.Text = "🥶\nMENU"
+menuBtn.TextColor3 = Color3.fromRGB(100, 200, 255)
+menuBtn.Font = Enum.Font.GothamBold
+menuBtn.TextSize = 14
+menuBtn.TextWrapped = true
+menuBtn.BorderSizePixel = 0
+Instance.new("UICorner", menuBtn).CornerRadius = UDim.new(0, 10)
 
--- Button actions
-autoLeftBtn.MouseButton1Click:Connect(function()
-    AutoWalkEnabled = not AutoWalkEnabled
-    Enabled.AutoWalkEnabled = AutoWalkEnabled
-    if AutoWalkEnabled then startAutoWalk() leftInner.Visible = true leftCircle.BackgroundColor3 = Color3.fromRGB(80, 160, 255) else stopAutoWalk() leftInner.Visible = false leftCircle.BackgroundColor3 = Color3.fromRGB(30, 30, 40) end
-end)
+local menuStroke = Instance.new("UIStroke", menuBtn)
+menuStroke.Thickness = 2
+menuStroke.Color = Color3.fromRGB(100, 200, 255)
+menuStroke.Transparency = 0.4
 
-autoRightBtn.MouseButton1Click:Connect(function()
-    AutoRightEnabled = not AutoRightEnabled
-    Enabled.AutoRightEnabled = AutoRightEnabled
-    if AutoRightEnabled then startAutoRight() rightInner.Visible = true rightCircle.BackgroundColor3 = Color3.fromRGB(80, 160, 255) else stopAutoRight() rightInner.Visible = false rightCircle.BackgroundColor3 = Color3.fromRGB(30, 30, 40) end
-end)
-
-floatBtn.MouseButton1Click:Connect(function()
-    Enabled.Float = not Enabled.Float
-    if Enabled.Float then startFloat() floatInner.Visible = true floatCircle.BackgroundColor3 = Color3.fromRGB(80, 160, 255) else stopFloat() floatInner.Visible = false floatCircle.BackgroundColor3 = Color3.fromRGB(30, 30, 40) end
-end)
-
-batBtn.MouseButton1Click:Connect(function()
-    Enabled.BatAimbot = not Enabled.BatAimbot
-    if Enabled.BatAimbot then startBatAimbot() batBtn.BackgroundColor3 = Color3.fromRGB(80, 160, 255) else stopBatAimbot() batBtn.BackgroundColor3 = Color3.fromRGB(10, 10, 18) end
-end)
-
--- 🥶 MENU BUTTON OPENS MAIN GUI
 menuBtn.MouseButton1Click:Connect(function()
     main.Visible = not main.Visible
     playSound("rbxassetid://6895079813", 0.6, 1.2)
 end)
 
--- Start Auto Steal automatically
+-- Start Auto Steal
 task.spawn(function()
-    task.wait(1.5)
+    task.wait(1)
     Enabled.AutoSteal = true
     startAutoSteal()
-    print("[TEMU KAWATAN] Auto Steal started automatically!")
 end)
 
--- ==================== TEMU HUB EXACT UI ====================
-
+-- ==================== TEMU HUB UI (unchanged) ====================
 local function createTemuHubUI()
     local temuHubFrame = Instance.new("Frame", sg)
     temuHubFrame.Name = "TemuHubFrame"
@@ -2600,5 +2573,5 @@ game:BindToClose(function()
     if autoLeftLoopMonitor then autoLeftLoopMonitor:Disconnect() end
 end)
 
-print("[TEMU KAWATAN] Mobile friendly UI + Auto Steal ON + 🥶 Menu button added")
--- ==================== END OF ADDED CODE (NO ORIGINAL LINES REMOVED) ====================
+print("[TEMU KAWATAN] Side buttons updated: 1 row, smaller, with background, black→white when ON")
+-- ==================== END OF UPDATE ====================
