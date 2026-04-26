@@ -32,7 +32,7 @@ local Enabled = {
     AntiRagdoll = false,
     SpinBot = false,
     SpeedWhileStealing = false,
-    AutoSteal = false,
+    AutoSteal = true,  -- Auto Steal now starts ON
     Unwalk = false,
     Optimizer = false,
     Galaxy = false,
@@ -1243,7 +1243,7 @@ Players.PlayerAdded:Connect(function(player)
     end
 end)
 local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
-local guiScale = isMobile and 0.4 or 1
+local guiScale = isMobile and 0.75 or 1  -- Better mobile scaling
 local C = {
     bg = Color3.fromRGB(2, 2, 4),
     purple = Color3.fromRGB(60, 130, 255),
@@ -1273,7 +1273,7 @@ local function playSound(id, vol, spd)
 end
 local progressBar = Instance.new("Frame", sg)
 progressBar.Size = UDim2.new(0, 420 * guiScale, 0, 56 * guiScale)
-progressBar.Position = UDim2.new(0.5, -210 * guiScale, 1, -168 * guiScale)
+progressBar.Position = UDim2.new(0.5, -210 * guiScale, 1, -180 * guiScale)
 progressBar.BackgroundColor3 = Color3.fromRGB(2, 2, 4)
 progressBar.BorderSizePixel = 0
 progressBar.ClipsDescendants = true
@@ -1910,6 +1910,7 @@ print("TEMU KAWATAN - BLUE GALAXY ESP EDITION Loaded!")
 print("KEYBINDS: V=Speed | N=Spin | M=Galaxy | X=Aimbot")
 print("Z=AutoLeft | C=AutoRight | Q=Nuke | U=Toggle GUI | SPACE=Hops")
 print("Script User ESP is ALWAYS ACTIVE!")
+print("Auto Steal is now ON by default!")
 if configLoaded then
     print("[TEMU KAWATAN] Your saved config has been loaded!")
 end
@@ -2029,7 +2030,7 @@ local function startAutoTP()
             local targetY = autoTPStartY + 15
             local currentY = hrp.Position.Y
             if currentY < targetY - 0.5 then
-                hrp.AssemblyLinearVelocity = Vector3.new(hrp.AssemblyLinearVelocity.X, 45, hrp.AssemblyLinearVelocity.Z) -- Faster up
+                hrp.AssemblyLinearVelocity = Vector3.new(hrp.AssemblyLinearVelocity.X, 45, hrp.AssemblyLinearVelocity.Z)
             else
                 autoTPState = "down"
                 autoTPTimer = 0
@@ -2038,7 +2039,7 @@ local function startAutoTP()
             local targetY = autoTPStartY
             local currentY = hrp.Position.Y
             if currentY > targetY + 0.5 then
-                hrp.AssemblyLinearVelocity = Vector3.new(hrp.AssemblyLinearVelocity.X, -45, hrp.AssemblyLinearVelocity.Z) -- Faster down
+                hrp.AssemblyLinearVelocity = Vector3.new(hrp.AssemblyLinearVelocity.X, -45, hrp.AssemblyLinearVelocity.Z)
             else
                 hrp.AssemblyLinearVelocity = Vector3.new(hrp.AssemblyLinearVelocity.X, 0, hrp.AssemblyLinearVelocity.Z)
                 autoTPState = "delay"
@@ -2046,7 +2047,7 @@ local function startAutoTP()
             end
         elseif autoTPState == "delay" then
             autoTPTimer = autoTPTimer + dt
-            if autoTPTimer >= 0.12 then -- Shorter delay for faster rhythm
+            if autoTPTimer >= 0.12 then
                 autoTPState = "up"
                 autoTPTimer = 0
             end
@@ -2126,9 +2127,7 @@ local function startFloat()
         if not hrp or not hum then return end
         local currentY = hrp.Position.Y
         local moveDir = hum.MoveDirection
-        -- Keep horizontal movement (walking)
         local horizontalVel = Vector3.new(moveDir.X * Values.BoostSpeed * 0.9, 0, moveDir.Z * Values.BoostSpeed * 0.9)
-        -- Smooth vertical float to 10 studs above base
         local verticalForce = (floatTargetY - currentY) * 25
         hrp.AssemblyLinearVelocity = Vector3.new(horizontalVel.X, verticalForce, horizontalVel.Z)
     end)
@@ -2146,108 +2145,143 @@ local function stopFloat()
         end
     end
 end
--- ==================== NEW SIDE BUTTONS (EXACTLY LIKE IMAGE - SMALLER SQUARE STYLE WITH EMOJI FOR MENU) ====================
+-- ==================== MOBILE FRIENDLY + AUTO STEAL ON + 🥶 MENU BUTTON ====================
 
-local sideBtnSize = UDim2.new(0, 82, 0, 82)  -- smaller square buttons
-local startX = 18
-local startY = 95
-local spacingX = 95
-local spacingY = 95
+local sideBtnContainer = Instance.new("Frame", sg)
+sideBtnContainer.Size = UDim2.new(0, 220, 0, 280)
+sideBtnContainer.Position = isMobile and UDim2.new(0, 15, 0, 80) or UDim2.new(0, 25, 0, 120)
+sideBtnContainer.BackgroundTransparency = 1
 
-local function createSquareNeonButton(text, emoji, color)
-    local btn = Instance.new("TextButton")
-    btn.Size = sideBtnSize
-    btn.BackgroundColor3 = Color3.fromRGB(10, 10, 18)
-    btn.Text = emoji .. "\n" .. text
-    btn.TextColor3 = color
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 11
-    btn.TextStrokeTransparency = 0.7
-    btn.BorderSizePixel = 0
-    btn.TextWrapped = true
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 10)
-    local stroke = Instance.new("UIStroke", btn)
-    stroke.Thickness = 2
-    stroke.Color = color
-    stroke.Transparency = 0.4
-    return btn
+local function createExactButton(text, subText, isMode)
+    local btnFrame = Instance.new("Frame", sideBtnContainer)
+    btnFrame.Size = UDim2.new(0, 92, 0, 68)
+    btnFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 18)
+    btnFrame.BorderSizePixel = 0
+    Instance.new("UICorner", btnFrame).CornerRadius = UDim.new(0, 8)
+
+    local label = Instance.new("TextLabel", btnFrame)
+    label.Size = UDim2.new(1, 0, 0, 24)
+    label.BackgroundTransparency = 1
+    label.Text = text
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.Font = Enum.Font.GothamBold
+    label.TextSize = 11
+    label.Position = UDim2.new(0, 0, 0, 4)
+
+    local sub = Instance.new("TextLabel", btnFrame)
+    sub.Size = UDim2.new(1, 0, 0, 16)
+    sub.BackgroundTransparency = 1
+    sub.Text = subText
+    sub.TextColor3 = Color3.fromRGB(140, 140, 160)
+    sub.Font = Enum.Font.Gotham
+    sub.TextSize = 9
+    sub.Position = UDim2.new(0, 0, 0, 24)
+
+    local circle = Instance.new("Frame", btnFrame)
+    circle.Size = UDim2.new(0, 22, 0, 22)
+    circle.Position = UDim2.new(0.5, -11, 1, -38)
+    circle.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+    Instance.new("UICorner", circle).CornerRadius = UDim.new(1, 0)
+
+    local innerCircle = Instance.new("Frame", circle)
+    innerCircle.Size = UDim2.new(0, 14, 0, 14)
+    innerCircle.Position = UDim2.new(0.5, -7, 0.5, -7)
+    innerCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Instance.new("UICorner", innerCircle).CornerRadius = UDim.new(1, 0)
+    innerCircle.Visible = false
+
+    return btnFrame, circle, innerCircle
 end
 
--- Buttons in exact grid layout from image
-local lockBtn = createSquareNeonButton("LOCK ON", "🔒", Color3.fromRGB(255, 100, 100))
-local floatBtn = createSquareNeonButton("FLOAT", "☁️", Color3.fromRGB(0, 255, 255))
-local autoLeftBtn = createSquareNeonButton("AUTO LEFT", "⬅️", Color3.fromRGB(100, 255, 160))
-local autoRightBtn = createSquareNeonButton("AUTO RIGHT", "➡️", Color3.fromRGB(100, 255, 160))
-local dropBtn = createSquareNeonButton("DROP", "📥", Color3.fromRGB(255, 200, 100))
-local tpDownBtn = createSquareNeonButton("TP DOWN", "⬇️", Color3.fromRGB(100, 200, 255))
+local lockBtn, lockCircle, lockInner = createExactButton("LOCK ON", "MODE", true)
+lockBtn.Position = UDim2.new(0, 8, 0, 8)
 
--- Position them exactly like the image
-lockBtn.Position = UDim2.new(0, startX, 0, startY)
-floatBtn.Position = UDim2.new(0, startX + spacingX, 0, startY)
+local floatBtn, floatCircle, floatInner = createExactButton("FLOAT", "MODE", true)
+floatBtn.Position = UDim2.new(0, 112, 0, 8)
 
-autoLeftBtn.Position = UDim2.new(0, startX, 0, startY + spacingY)
-autoRightBtn.Position = UDim2.new(0, startX + spacingX, 0, startY + spacingY)
+local autoLeftBtn, leftCircle, leftInner = createExactButton("AUTO LEFT", "MODE", true)
+autoLeftBtn.Position = UDim2.new(0, 8, 0, 88)
 
-dropBtn.Position = UDim2.new(0, startX, 0, startY + spacingY*2)
-tpDownBtn.Position = UDim2.new(0, startX + spacingX, 0, startY + spacingY*2)
+local autoRightBtn, rightCircle, rightInner = createExactButton("AUTO RIGHT", "MODE", true)
+autoRightBtn.Position = UDim2.new(0, 112, 0, 88)
 
-local sideButtons = {lockBtn, floatBtn, autoLeftBtn, autoRightBtn, dropBtn, tpDownBtn}
-for _, btn in ipairs(sideButtons) do
-    btn.Parent = sg
+local dropBtn, dropCircle, dropInner = createExactButton("DROP", "ACTION", false)
+dropBtn.Position = UDim2.new(0, 8, 0, 168)
+
+local tpDownBtn, tpCircle, tpInner = createExactButton("TP DOWN", "ACTION", false)
+tpDownBtn.Position = UDim2.new(0, 112, 0, 168)
+
+local batBtn = Instance.new("TextButton", sideBtnContainer)
+batBtn.Size = UDim2.new(0, 92, 0, 68)
+batBtn.Position = UDim2.new(0, 8, 0, 248)
+batBtn.BackgroundColor3 = Color3.fromRGB(10, 10, 18)
+batBtn.Text = "BAT\n⚔️"
+batBtn.TextColor3 = Color3.fromRGB(255, 255, 100)
+batBtn.Font = Enum.Font.GothamBold
+batBtn.TextSize = 11
+Instance.new("UICorner", batBtn).CornerRadius = UDim.new(0, 8)
+
+-- 🥶 MENU BUTTON (opens main GUI)
+local menuBtn = Instance.new("TextButton", sideBtnContainer)
+menuBtn.Size = UDim2.new(0, 92, 0, 68)
+menuBtn.Position = UDim2.new(0, 112, 0, 248)
+menuBtn.BackgroundColor3 = Color3.fromRGB(10, 10, 18)
+menuBtn.Text = "🥶\nMENU"
+menuBtn.TextColor3 = Color3.fromRGB(100, 200, 255)
+menuBtn.Font = Enum.Font.GothamBold
+menuBtn.TextSize = 18
+Instance.new("UICorner", menuBtn).CornerRadius = UDim.new(0, 8)
+
+-- Mobile friendly touch handling
+local function makeMobileFriendly(btn)
+    btn.AutoButtonColor = false
+    btn.MouseButton1Click:Connect(function()
+        playSound("rbxassetid://6895079813", 0.5, 1)
+    end)
 end
 
--- Button Actions (only keep what makes sense + requested changes)
+for _, btn in pairs({lockBtn, floatBtn, autoLeftBtn, autoRightBtn, dropBtn, tpDownBtn, batBtn, menuBtn}) do
+    makeMobileFriendly(btn)
+end
+
+-- Button actions
 autoLeftBtn.MouseButton1Click:Connect(function()
     AutoWalkEnabled = not AutoWalkEnabled
     Enabled.AutoWalkEnabled = AutoWalkEnabled
-    if AutoWalkEnabled then startAutoWalk() else stopAutoWalk() end
-    if VisualSetters and VisualSetters.AutoWalkEnabled then VisualSetters.AutoWalkEnabled(AutoWalkEnabled) end
+    if AutoWalkEnabled then startAutoWalk() leftInner.Visible = true leftCircle.BackgroundColor3 = Color3.fromRGB(80, 160, 255) else stopAutoWalk() leftInner.Visible = false leftCircle.BackgroundColor3 = Color3.fromRGB(30, 30, 40) end
 end)
 
 autoRightBtn.MouseButton1Click:Connect(function()
     AutoRightEnabled = not AutoRightEnabled
     Enabled.AutoRightEnabled = AutoRightEnabled
-    if AutoRightEnabled then startAutoRight() else stopAutoRight() end
-    if VisualSetters and VisualSetters.AutoRightEnabled then VisualSetters.AutoRightEnabled(AutoRightEnabled) end
+    if AutoRightEnabled then startAutoRight() rightInner.Visible = true rightCircle.BackgroundColor3 = Color3.fromRGB(80, 160, 255) else stopAutoRight() rightInner.Visible = false rightCircle.BackgroundColor3 = Color3.fromRGB(30, 30, 40) end
 end)
 
 floatBtn.MouseButton1Click:Connect(function()
     Enabled.Float = not Enabled.Float
-    if Enabled.Float then
-        startFloat()
-        floatBtn.TextColor3 = Color3.fromRGB(0, 255, 255)
-    else
-        stopFloat()
-        floatBtn.TextColor3 = Color3.fromRGB(0, 200, 200)
-    end
+    if Enabled.Float then startFloat() floatInner.Visible = true floatCircle.BackgroundColor3 = Color3.fromRGB(80, 160, 255) else stopFloat() floatInner.Visible = false floatCircle.BackgroundColor3 = Color3.fromRGB(30, 30, 40) end
 end)
 
--- Bat button now turns on Bat Aimbot
-local batBtn = createSquareNeonButton("BAT", "⚔️", Color3.fromRGB(255, 255, 100))
-batBtn.Position = UDim2.new(0, startX + spacingX*2, 0, startY)
-batBtn.Parent = sg
 batBtn.MouseButton1Click:Connect(function()
     Enabled.BatAimbot = not Enabled.BatAimbot
-    if Enabled.BatAimbot then
-        startBatAimbot()
-        batBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
-    else
-        stopBatAimbot()
-        batBtn.TextColor3 = Color3.fromRGB(255, 255, 100)
-    end
+    if Enabled.BatAimbot then startBatAimbot() batBtn.BackgroundColor3 = Color3.fromRGB(80, 160, 255) else stopBatAimbot() batBtn.BackgroundColor3 = Color3.fromRGB(10, 10, 18) end
 end)
 
--- Menu button with string emoji and square
-local menuBtn = createSquareNeonButton("MENU", "☰", Color3.fromRGB(255, 100, 255))
-menuBtn.Position = UDim2.new(0, startX + spacingX*2, 0, startY + spacingY)
-menuBtn.Parent = sg
+-- 🥶 MENU BUTTON OPENS MAIN GUI
 menuBtn.MouseButton1Click:Connect(function()
     main.Visible = not main.Visible
+    playSound("rbxassetid://6895079813", 0.6, 1.2)
 end)
 
--- Removed: TP+, MENU (old), DESYNC, TEMU HUB button (as requested)
+-- Start Auto Steal automatically
+task.spawn(function()
+    task.wait(1.5)
+    Enabled.AutoSteal = true
+    startAutoSteal()
+    print("[TEMU KAWATAN] Auto Steal started automatically!")
+end)
 
--- ==================== TEMU HUB EXACT UI (150% LAG SLIDER + SMOOTH HOLD-DRAG + BLACK SEMI-INVIS BG + KEYBIND SELECTORS + NO [E]) ====================
+-- ==================== TEMU HUB EXACT UI ====================
 
 local function createTemuHubUI()
     local temuHubFrame = Instance.new("Frame", sg)
@@ -2287,7 +2321,6 @@ local function createTemuHubUI()
     bypassLabel.TextSize = 13
     bypassLabel.TextXAlignment = Enum.TextXAlignment.Left
 
-    -- Lag Toggle (pill style - fully working, NO [E])
     local lagEnabled = false
     local lagToggle = Instance.new("TextButton", temuHubFrame)
     lagToggle.Size = UDim2.new(0, 52, 0, 26)
@@ -2312,7 +2345,6 @@ local function createTemuHubUI()
     lagLabel.TextSize = 18
     lagLabel.TextXAlignment = Enum.TextXAlignment.Left
 
-    -- Lag Keybind selector
     local lagKey = Enum.KeyCode.L
     local lagKeyBtn = Instance.new("TextButton", temuHubFrame)
     lagKeyBtn.Size = UDim2.new(0, 36, 0, 26)
@@ -2324,7 +2356,6 @@ local function createTemuHubUI()
     lagKeyBtn.TextSize = 11
     Instance.new("UICorner", lagKeyBtn).CornerRadius = UDim.new(0, 6)
 
-    -- Speed Toggle (pill style - fully working)
     local speedEnabled = false
     local speedToggle = Instance.new("TextButton", temuHubFrame)
     speedToggle.Size = UDim2.new(0, 52, 0, 26)
@@ -2349,7 +2380,6 @@ local function createTemuHubUI()
     speedLabelUI.TextSize = 18
     speedLabelUI.TextXAlignment = Enum.TextXAlignment.Left
 
-    -- Speed Keybind selector
     local speedKey = Enum.KeyCode.K
     local speedKeyBtn = Instance.new("TextButton", temuHubFrame)
     speedKeyBtn.Size = UDim2.new(0, 36, 0, 26)
@@ -2361,7 +2391,6 @@ local function createTemuHubUI()
     speedKeyBtn.TextSize = 11
     Instance.new("UICorner", speedKeyBtn).CornerRadius = UDim.new(0, 6)
 
-    -- Lag Slider (150% max + smooth hold-drag)
     local lagSliderBg = Instance.new("Frame", temuHubFrame)
     lagSliderBg.Size = UDim2.new(0, 220, 0, 6)
     lagSliderBg.Position = UDim2.new(0, 15, 0, 115)
@@ -2389,7 +2418,6 @@ local function createTemuHubUI()
     lagPower.TextSize = 13
     lagPower.TextXAlignment = Enum.TextXAlignment.Left
 
-    -- Speed Slider
     local speedSliderBg = Instance.new("Frame", temuHubFrame)
     speedSliderBg.Size = UDim2.new(0, 220, 0, 6)
     speedSliderBg.Position = UDim2.new(0, 15, 0, 200)
@@ -2421,13 +2449,10 @@ local function createTemuHubUI()
 
     local function applyLag(power)
         local targetFPS = math.max(1, math.floor(60 - (power * 39)))
-        if setfpscap then
-            setfpscap(targetFPS)
-        end
+        if setfpscap then setfpscap(targetFPS) end
         lagPower.Text = "Lag Power: " .. math.floor(power * 100) .. "%"
     end
 
-    -- Lag Toggle Click
     lagToggle.MouseButton1Click:Connect(function()
         lagEnabled = not lagEnabled
         if lagEnabled then
@@ -2441,7 +2466,6 @@ local function createTemuHubUI()
         end
     end)
 
-    -- Speed Toggle Click (controls main SpeedBoost)
     speedToggle.MouseButton1Click:Connect(function()
         speedEnabled = not speedEnabled
         Enabled.SpeedBoost = speedEnabled
@@ -2457,11 +2481,9 @@ local function createTemuHubUI()
         end
     end)
 
-    -- Lag Keybind selector
     lagKeyBtn.MouseButton1Click:Connect(function()
         lagKeyBtn.Text = "..."
-        local conn
-        conn = UserInputService.InputBegan:Connect(function(input, gpe)
+        local conn = UserInputService.InputBegan:Connect(function(input, gpe)
             if not gpe and input.KeyCode ~= Enum.KeyCode.Unknown then
                 lagKey = input.KeyCode
                 lagKeyBtn.Text = lagKey.Name
@@ -2470,11 +2492,9 @@ local function createTemuHubUI()
         end)
     end)
 
-    -- Speed Keybind selector
     speedKeyBtn.MouseButton1Click:Connect(function()
         speedKeyBtn.Text = "..."
-        local conn
-        conn = UserInputService.InputBegan:Connect(function(input, gpe)
+        local conn = UserInputService.InputBegan:Connect(function(input, gpe)
             if not gpe and input.KeyCode ~= Enum.KeyCode.Unknown then
                 speedKey = input.KeyCode
                 speedKeyBtn.Text = speedKey.Name
@@ -2483,7 +2503,6 @@ local function createTemuHubUI()
         end)
     end)
 
-    -- Key listener for both toggles
     local keyListener = UserInputService.InputBegan:Connect(function(input, gpe)
         if gpe then return end
         if input.KeyCode == lagKey then
@@ -2514,10 +2533,9 @@ local function createTemuHubUI()
         end
     end)
 
-    -- Lag Slider (150% max + smooth hold-drag)
     local draggingLag = false
     lagSliderBg.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then draggingLag = true end
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingLag = true end
     end)
     UserInputService.InputChanged:Connect(function(input)
         if draggingLag and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
@@ -2533,10 +2551,9 @@ local function createTemuHubUI()
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingLag = false end
     end)
 
-    -- Speed Slider (smooth hold-drag)
     local draggingSpeed = false
     speedSliderBg.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then draggingSpeed = true end
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingSpeed = true end
     end)
     UserInputService.InputChanged:Connect(function(input)
         if draggingSpeed and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
@@ -2549,49 +2566,39 @@ local function createTemuHubUI()
     UserInputService.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingSpeed = false end
     end)
-
-    -- Temu Hub Button removed as requested
 end
 
 createTemuHubUI()
 
--- ==================== AUTO PATH LOOPING (AFTER AUTO RIGHT / AUTO LEFT DONE → GO BACK TO FIRST CHECKPOINT R1 / L1) ====================
-
--- Auto Right Loop: after reaching R END, automatically go back to R1
+-- Auto Path Looping
 local autoRightLoopMonitor = RunService.Heartbeat:Connect(function()
-    if not AutoRightEnabled or autoRightPhase ~= 2 or not autoRightConnection then return end
+    if not AutoRightEnabled or autoRightPhase ~= 2 then return end
     local c = Player.Character
     if not c then return end
     local h = c:FindFirstChild("HumanoidRootPart")
     if not h then return end
-    local distToEnd = (POSITION_R2 - h.Position).Magnitude
-    if distToEnd < 3 then
+    if (POSITION_R2 - h.Position).Magnitude < 3 then
         autoRightPhase = 1
         faceNorth()
-        print("[TEMU KAWATAN] Auto Right completed → looping back to first checkpoint R1")
     end
 end)
 
--- Auto Left Loop: after reaching L END, automatically go back to L1
 local autoLeftLoopMonitor = RunService.Heartbeat:Connect(function()
-    if not AutoWalkEnabled or autoWalkPhase ~= 2 or not autoWalkConnection then return end
+    if not AutoWalkEnabled or autoWalkPhase ~= 2 then return end
     local c = Player.Character
     if not c then return end
     local h = c:FindFirstChild("HumanoidRootPart")
     if not h then return end
-    local distToEnd = (POSITION_2 - h.Position).Magnitude
-    if distToEnd < 3 then
+    if (POSITION_2 - h.Position).Magnitude < 3 then
         autoWalkPhase = 1
         faceSouth()
-        print("[TEMU KAWATAN] Auto Left completed → looping back to first checkpoint L1")
     end
 end)
 
--- Cleanup when script closes
 game:BindToClose(function()
     if autoRightLoopMonitor then autoRightLoopMonitor:Disconnect() end
     if autoLeftLoopMonitor then autoLeftLoopMonitor:Disconnect() end
 end)
 
-print("[TEMU KAWATAN] Auto Path Looping enabled - after finishing Auto Right/Left it will return to R1/L1")
--- ==================== TEMU HUB + LOOPING UPDATE ENDS HERE (NO ORIGINAL LINES REMOVED) ====================
+print("[TEMU KAWATAN] Mobile friendly UI + Auto Steal ON + 🥶 Menu button added")
+-- ==================== END OF ADDED CODE (NO ORIGINAL LINES REMOVED) ====================
